@@ -1,0 +1,226 @@
+<html>
+<head>
+  <title>Guess the Number!</title>
+  <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+<style type="text/css">
+	html {
+		font-size: 100%;
+	}
+
+	.blue {
+		background: black;
+	}
+
+	.seven {
+		width: 70%;
+	}
+
+	.center {
+		margin: 0 auto;
+	}
+
+	.center_text {
+		text-align: center;
+	}
+
+	body {
+		font-family: Open Sans Condensed;
+		color: white;
+	}
+
+	input[type=button] {
+		font-size: 5rem;
+		width: 10rem;
+	}
+
+	input[value] {
+		font-family: Open Sans Condensed;
+	}
+
+	input[type=text] {
+		border: none;
+	}
+
+	input[type=text]:focus {
+		outline: 0;
+	}
+
+	.landmine {
+		height: 4rem;
+		width: 4rem;
+		background-color: gray;
+		border-radius: 100%;
+		display: inline-block;
+		margin: 1rem;
+	}
+
+
+</style>
+</head>
+<body>
+
+<div class="contain center seven">
+	<div class="contain center seven blue">
+		<div class="contain center_text"><h1>Pick a Number from 1-100:</h1></div>
+		<div class="contain center_text"><h2><label id="response"></label></h2></div>
+		<div class="center_text"><input id="user-input" type="text" /></div>
+		<div class="contain center_text">
+			<input id="submit-button" type="button" value="Guess!" />
+		</div>
+		<div class="contain center_text">
+			<input id="reset" type="button" value="Start Over!" />
+		</div>
+		<div class="center_text">
+			<div class="landmine"></div>
+			<div class="landmine"></div>
+			<div class="landmine"></div>
+		</div>
+	</div>
+</div>
+
+
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script type="text/javascript">
+	(function(){
+
+			
+			// Business Logic
+
+			var secretNumber;
+
+			var landMineOne;
+			var landMineTwo;
+			var landMineThree;
+
+
+			var set_up = function() {
+				secretNumber = parseInt(Math.random() * 100, 10) + 1;
+				console.log("Heres the secret number, ssshh -> " + secretNumber);
+				do {
+					landMineOne = parseInt(Math.random() * 100, 10) + 1;
+					landMineTwo = parseInt(Math.random() * 100, 10) + 1;
+					landMineThree = parseInt(Math.random() * 100, 10) + 1;
+				} while (landMineOne == secretNumber || landMineTwo == secretNumber || landMineThree == secretNumber);
+				console.log("Landmines have been placed at " + landMineOne + " and " + landMineTwo + " and " + landMineThree);
+			}
+
+			window.onload = set_up();
+
+
+			var LandMineOneDiff = function(guess) { 
+				return Math.abs(landMineOne - guess); 
+			}
+
+			var LandMineTwoDiff = function(guess) { 
+				return Math.abs(landMineTwo - guess); 
+			}
+
+			var LandMineThreeDiff = function(guess) { 
+				return Math.abs(landMineThree - guess); 
+			}
+
+			var closest = function(guess) {
+				mines = [landMineOne, landMineTwo, landMineThree];
+				a = Math.abs(landMineOne - guess);
+				b = Math.abs(landMineTwo - guess);
+				c = Math.abs(landMineThree - guess);
+				array = [a, b, c];
+				array.sort
+				return array[0]
+			}
+
+			var game_logic = function(guess) {
+				var guess = parseInt(guess);
+				if (guess == landMineOne || guess == landMineTwo || guess == landMineThree) {
+					var message = "boom";
+					return message;
+				}
+				if (guess > secretNumber) {
+					var message = "high";
+				} else if (guess < secretNumber) {
+					var message = "low";
+				} else if (guess == secretNumber) {
+					var message = "correct"
+				} else {
+					var message = "bad";
+				}
+				return message // either correct, too high, too low
+			}
+
+
+			// UI
+
+			var set_up_ui = function() {
+				$('#user-input').val("");
+				$('#response').text('Begin! (and beware of landmines...)');	
+
+			}
+
+			set_up_ui();
+
+			$('#submit-button').on('click', function(e) {
+				var guess = $('#user-input').val();
+				message = game_logic(guess);
+				close_call = closest(guess);
+
+				$('.landmine').trigger('new-event');
+
+				if (message == "boom") {
+					$('#response').text("BOOOOOOOM!!!!");
+				} else if (message == "high") {
+					$('#response').text("To high. And FYI, you were " + close_call + " away from the closest mine!");
+				} else if (message == "low") {
+					$('#response').text("To low. And FYI, you were " + close_call + " away from the closest mine!");
+				} else if (message == "correct") {
+					$('#response').text("Good guessing!!!");
+				} else {
+					$('#response').text("uh?");
+				}
+			})
+
+			//
+
+			$('.landmine').on('new-event', function(e) {
+				var guess = $('#user-input').val();
+				var mines = document.getElementsByClassName('landmine');
+				var diffs = [LandMineOneDiff(guess), LandMineTwoDiff(guess), LandMineThreeDiff(guess)];
+	
+				for (var i = 0; i < 3; i++) {
+					if (diffs[i] == 1) {
+						mines[i].style.backgroundColor = "red";
+					} else if ( 1 < diffs[i] < 6) {
+						mines[i].style.backgroundColor = "yellow";
+					} else {
+						mines[i].style.backgroundColor = "gray";
+					};
+				}
+			})	
+		
+
+			$('#reset').on('click', function(e) {
+				set_up();
+				set_up_ui();
+			})
+
+ 	
+			
+			
+			// Create a div with a class landmine for every landmine number
+			// When a user makes a guess, trigger a 'new-guess' event and pass along the guessed number
+			// Make your landmine divs listen for the 'new-guess' event and change its own background color:
+			// It should always display how far the user's last guess is from the landmine
+			// If the user's guess is one number away, the box should be red
+			// If the user's guess is 2-5 away, the box should be yellow
+			// Else the box should be gray
+
+
+
+
+
+
+
+	})();
+	</script>
+</body>
+</html>
+
